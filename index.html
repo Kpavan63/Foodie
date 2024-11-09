@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodie - Smart Culinary Experience</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        .feature-icon {
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .feature-icon:hover {
+            transform: scale(1.2);
+        }
+        #vanta-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .mobile-menu {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .desktop-menu {
+                display: none;
+            }
+            .mobile-menu {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div id="vanta-background"></div>
+    <header class="bg-white shadow-md fixed w-full z-10">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-gray-800">Foodie</div>
+                <div class="desktop-menu flex space-x-4">
+                    <i class="fas fa-utensils feature-icon text-blue-500" id="menu-icon" title="Menu"></i>
+                    <i class="fas fa-camera feature-icon text-green-500" id="food-detection-icon" title="Food Detection"></i>
+                    <i class="fas fa-brain feature-icon text-purple-500" id="ai-assistant-icon" title="AI Assistant"></i>
+                    <i class="fas fa-chart-pie feature-icon text-red-500" id="nutrition-analysis-icon" title="Nutrition Analysis"></i>
+                    <i class="fas fa-wine-glass-alt feature-icon text-yellow-500" id="food-pairing-icon" title="Food Pairing"></i>
+                    <i class="fas fa-lightbulb feature-icon text-indigo-500" id="recipe-generator-icon" title="Recipe Generator"></i>
+                    <i class="fas fa-map-marker-alt feature-icon text-pink-500" id="restaurant-finder-icon" title="Restaurant Finder"></i>
+                    <i class="fas fa-calendar-alt feature-icon text-teal-500" id="meal-planner-icon" title="Meal Planner"></i>
+                    <i class="fas fa-cookie-bite feature-icon text-orange-500" id="taste-profile-icon" title="Taste Profile"></i>
+                    <i class="fas fa-globe feature-icon text-cyan-500" id="culinary-tour-icon" title="Virtual Culinary Tour"></i>
+                    <i class="fas fa-heartbeat feature-icon text-red-600" id="health-score-icon" title="Food Health Score"></i>
+                    <i class="fas fa-allergies feature-icon text-yellow-600" id="allergy-checker-icon" title="Allergy Checker"></i>
+                    <i class="fas fa-weight feature-icon text-green-600" id="portion-control-icon" title="Portion Control Assistant"></i>
+                    <i class="fas fa-seedling feature-icon text-blue-600" id="nutrient-optimizer-icon" title="Nutrient Optimizer"></i>
+                    <i class="fas fa-dna feature-icon text-purple-600" id="personalized-diet-icon" title="Personalized Diet Planner"></i>
+                </div>
+                <div class="mobile-menu">
+                    <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600" aria-label="toggle menu">
+                        <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
+                            <path fill-rule="evenodd" d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-20">
+        <section id="hero" class="text-center py-20">
+            <h1 class="text-5xl font-bold mb-4">Welcome to Foodie</h1>
+            <p class="text-xl mb-8">Discover a world of culinary delights and smart dining experiences!</p>
+        </section>
+
+        <section id="features" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Feature sections will be dynamically populated -->
+        </section>
+    </main>
+
+    <script>
+        // Background Animation
+        VANTA.NET({
+            el: "#vanta-background",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x3faf82,
+            backgroundColor: 0xf0f0f0
+        })
+
+        // Floating food particles
+        const foodEmojis = ['🍔', '🍕', '🥗', '🍣', '🍖', '🍗', '🥩', '🌮', '🌯', '🥘'];
+        
+        function createFoodParticle() {
+            const emoji = document.createElement('div');
+            emoji.textContent = foodEmojis[Math.floor(Math.random() * foodEmojis.length)];
+            emoji.style.position = 'fixed';
+            emoji.style.left = ${Math.random() * 100}vw;
+            emoji.style.top = '-20px';
+            emoji.style.fontSize = '20px';
+            emoji.style.pointerEvents = 'none';
+            document.body.appendChild(emoji);
+
+            anime({
+                targets: emoji,
+                translateY: window.innerHeight + 20,
+                translateX: () => anime.random(-50, 50),
+                rotate: () => anime.random(-360, 360),
+                opacity: [1, 0],
+                duration: () => anime.random(3000, 5000),
+                easing: 'easeOutQuad',
+                complete: () => {
+                    document.body.removeChild(emoji);
+                }
+            });
+        }
+
+        setInterval(createFoodParticle, 500);
+
+        // Feature data
+        const features = [
+            {
+                id: 'menu',
+                title: 'Interactive Menu',
+                description: 'Explore our delicious offerings with an interactive, AI-powered menu.',
+                icon: 'fa-utensils',
+                color: 'blue'
+            },
+            {
+                id: 'food-detection',
+                title: 'Food Detection',
+                description: 'Use AI to identify and analyze the food in front of you.',
+                icon: 'fa-camera',
+                color: 'green'
+            },
+            {
+                id: 'ai-assistant',
+                title: 'AI Culinary Assistant',
+                description: 'Get personalized cooking tips and recipe suggestions from our AI.',
+                icon: 'fa-brain',
+                color: 'purple'
+            },
+            {
+                id: 'nutrition-analysis',
+                title: 'Nutrition Analysis',
+                description: 'Get detailed nutritional information for any dish or ingredient.',
+                icon: 'fa-chart-pie',
+                color: 'red'
+            },
+            {
+                id: 'food-pairing',
+                title: 'Food Pairing Recommender',
+                description: 'Discover perfect food and drink combinations.',
+                icon: 'fa-wine-glass-alt',
+                color: 'yellow'
+            },
+            {
+                id: 'recipe-generator',
+                title: 'AI Recipe Generator',
+                description: 'Create unique recipes based on your available ingredients and preferences.',
+                icon: 'fa-lightbulb',
+                color: 'indigo'
+            },
+            {
+                id: 'restaurant-finder',
+                title: 'Smart Restaurant Finder',
+                description: 'Find restaurants that match your taste profile and dietary requirements.',
+                icon: 'fa-map-marker-alt',
+                color: 'pink'
+            },
+            {
+                id: 'meal-planner',
+                title: 'Personalized Meal Planner',
+                description: 'Get AI-generated meal plans tailored to your nutritional needs and preferences.',
+                icon: 'fa-calendar-alt',
+                color: 'teal'
+            },
+            {
+                id: 'taste-profile',
+                title: 'Taste Profile Analyzer',
+                description: 'Discover your unique taste preferences through ML analysis.',
+                icon: 'fa-cookie-bite',
+                color: 'orange'
+            },
+            {
+                id: 'culinary-tour',
+                title: 'Virtual Culinary Tour',
+                description: 'Explore cuisines from around the world in an immersive 3D experience.',
+                icon: 'fa-globe',
+                color: 'cyan'
+            },
+            {
+                id: 'health-score',
+                title: 'Food Health Score',
+                description: 'Get an instant health rating for any food item or meal.',
+                icon: 'fa-heartbeat',
+                color: 'red-600'
+            },
+            {
+                id: 'allergy-checker',
+                title: 'Allergy Checker',
+                description: 'Scan ingredients to identify potential allergens and find safe alternatives.',
+                icon: 'fa-allergies',
+                color: 'yellow-600'
+            },
+            {
+                id: 'portion-control',
+                title: 'Portion Control Assistant',
+                description: 'Get AI-powered recommendations for optimal portion sizes based on your health goals.',
+                icon: 'fa-weight',
+                color: 'green-600'
+            },
+            {
+                id: 'nutrient-optimizer',
+                title: 'Nutrient Optimizer',
+                description: 'Analyze your meals and get suggestions to optimize nutrient intake.',
+                icon: 'fa-seedling',
+                color: 'blue-600'
+            },
+            {
+                id: 'personalized-diet',
+                title: 'Personalized Diet Planner',
+                description: 'Receive a customized diet plan based on your genetic profile and health data.',
+                icon: 'fa-dna',
+                color: 'purple-600'
+            }
+        ];
+
+        // Populate features
+        const featuresSection = document.getElementById('features');
+        features.forEach(feature => {
+            const featureElement = document.createElement('div');
+            featureElement.className = 'bg-white rounded-lg shadow-md p-6';
+            featureElement.innerHTML = `
+                <i class="fas ${feature.icon} text-4xl text-${feature.color} mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">${feature.title}</h3>
+                <p class="text-gray-600">${feature.description}</p>
+                <button class="mt-4 bg-${feature.color} text-white px-4 py-2 rounded hover:bg-${feature.color} transition-colors" onclick="showFeature('${feature.id}')">
+                    Try it
+                </button>
+            `;
+            featuresSection.appendChild(featureElement);
+        });
+
+        // Feature functionality
+        function showFeature(featureId) {
+            switch (featureId) {
+                case 'menu':
+                    showInteractiveMenu();
+                    break;
+                case 'food-detection':
+                    showFoodDetection();
+                    break;
+                case 'ai-assistant':
+                    showAIAssistant();
+                    break;
+                case 'nutrition-analysis':
+                    showNutritionAnalysis();
+                    break;
+                case 'food-pairing':
+                    showFoodPairing();
+                    break;
+                case 'recipe-generator':
+                    showRecipeGenerator();
+                    break;
+                case 'restaurant-finder':
+                    showRestaurantFinder();
+                    break;
+                case 'meal-planner':
+                    showMealPlanner();
+                    break;
+                case 'taste-profile':
+                    showTasteProfile();
+                    break;
+                case 'culinary-tour':
+                    showCulinaryTour();
+                    break;
+                case 'health-score':
+                    showHealthScore();
+                    break;
+                case 'allergy-checker':
+                    showAllergyChecker();
+                    break;
+                case 'portion-control':
+                    showPortionControl();
+                    break;
+                case 'nutrient-optimizer':
+                    showNutrientOptimizer();
+                    break;
+                case 'personalized-diet':
+                    showPersonalizedDiet();
+                    break;
+            }
+        }
+
+        function showInteractiveMenu() {
+            Swal.fire({
+                title: 'Interactive Menu',
+                html: `
+                    <div id="menu-container" class="grid grid-cols-2 gap-4">
+                        <div class="menu-item" data-name="Burger">🍔 Burger</div>
+                        <div class="menu-item" data-name="Pizza">🍕 Pizza</div>
+                        <div class="menu-item" data-name="Salad">🥗 Salad</div>
+                        <div class="menu-item" data-name="Sushi">🍣 Sushi</div>
+                    </div>
+                    <div id="menu-details" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const menuItems = document.querySelectorAll('.menu-item');
+                    const menuDetails = document.getElementById('menu-details');
+                    menuItems.forEach(item => {
+                        item.addEventListener('click', () => {
+                            const name = item.getAttribute('data-name');
+                            menuDetails.innerHTML = `
+                                <h3 class="text-lg font-bold">${name}</h3>
+                                <p>Calories: ${Math.floor(Math.random() * 500 + 200)}</p>
+                                <p>Price: $${(Math.random() * 15 + 5).toFixed(2)}</p>
+                            `;
+                        });
+                    });
+                }
+            });
+        }
+
+        async function showFoodDetection() {
+            const { value: cameraType } = await Swal.fire({
+                title: 'Select Camera',
+                input: 'radio',
+                inputOptions: {
+                    'user': 'Front Camera',
+                    'environment': 'Back Camera'
+                },
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'You need to choose a camera!'
+                    }
+                }
+            });
+
+            if (cameraType) {
+                Swal.fire({
+                    title: 'Food Detection',
+                    html: `
+                        <video id="video" width="100%" height="auto" autoplay></video>
+                        <canvas id="canvas" width="400" height="300" style="display:none;"></canvas>
+                        <div id="loader" class="loader mx-auto mt-4" style="display:none;"></div>
+                        <div id="results" class="mt-4 grid grid-cols-2 gap-4"></div>
+                    `,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    width: '90%',
+                    customClass: {
+                        container: 'responsive-alert'
+                    },
+                    didRender: async () => {
+                        const video = document.getElementById('video');
+                        const canvas = document.getElementById('canvas');
+                        const results = document.getElementById('results');
+                        const loader = document.getElementById('loader');
+
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraType } });
+                            video.srcObject = stream;
+
+                            const model = await cocoSsd.load();
+
+                            async function detectObjects() {
+                                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                                const predictions = await model.detect(canvas);
+                                
+                                results.innerHTML = '';
+                                predictions.forEach(prediction => {
+                                    const card = document.createElement('div');
+                                    card.className = 'bg-white rounded-lg shadow-md p-4';
+                                    card.innerHTML = `
+                                        <img src="${canvas.toDataURL()}" alt="${prediction.class}" class="w-full h-32 object-cover mb-2">
+                                        <h3 class="text-lg font-bold">${prediction.class}</h3>
+                                        <p>Confidence: ${(prediction.score * 100).toFixed(2)}%</p>
+                                    `;
+                                    results.appendChild(card);
+                                });
+
+                                requestAnimationFrame(detectObjects);
+                            }
+
+                            loader.style.display = 'block';
+                            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulating model loading time
+                            loader.style.display = 'none';
+
+                            detectObjects();
+                        } catch (error) {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'Unable to access the camera', 'error');
+                        }
+                    }
+                });
+            }
+        }
+
+        function showAIAssistant() {
+            Swal.fire({
+                title: 'AI Culinary Assistant',
+                input: 'text',
+                inputPlaceholder: 'Ask me anything about cooking...',
+                showCancelButton: true,
+                confirmButtonText: 'Ask',
+                showLoaderOnConfirm: true,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                preConfirm: (query) => {
+                    // Simulated AI response
+                    const responses = [
+                        "To make your pasta sauce creamier, try adding a bit of heavy cream or cream cheese.",
+                        "For a crispier pizza crust, preheat your oven to the highest temperature and use a pizza stone.",
+                        "To enhance the flavor of your soup, try adding a splash of vinegar or lemon juice at the end.",
+                        "When cooking steak, let it rest for 5-10 minutes after cooking to retain its juices.",
+                        "To prevent your guacamole from browning, add a thin layer of water on top and refrigerate."
+                    ];
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            resolve(responses[Math.floor(Math.random() * responses.length)]);
+                        }, 1500);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) Swal.fire('AI Assistant says:', result.value);
+            });
+        }
+
+        function showNutritionAnalysis() {
+            Swal.fire({
+                title: 'Nutrition Analysis',
+                html: `
+                    <input id="food-input" class="swal2-input" placeholder="Enter a food item">
+                    <div id="nutrition-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const foodInput = document.getElementById('food-input');
+                    const nutritionResult = document.getElementById('nutrition-result');
+                    foodInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') {
+                            // Simulated nutrition data
+                            const calories = Math.floor(Math.random() * 500 + 100);
+                            const protein = Math.floor(Math.random() * 30 + 5);
+                            const carbs = Math.floor(Math.random() * 50 + 10);
+                            const fat = Math.floor(Math.random() * 20 + 2);
+
+                            nutritionResult.innerHTML = `
+                                <h3 class="text-lg font-bold">Nutrition for ${foodInput.value}</h3>
+                                <p>Calories: ${calories}</p>
+                                <p>Protein: ${protein}g</p>
+                                <p>Carbs: ${carbs}g</p>
+                                <p>Fat: ${fat}g</p>
+                            `;
+                        }
+                    });
+                }
+            });
+        }
+
+        function showFoodPairing() {
+            Swal.fire({
+                title: 'Food Pairing Recommender',
+                html: `
+                    <input id="food-input" class="swal2-input" placeholder="Enter a food item">
+                    <div id="pairing-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const foodInput = document.getElementById('food-input');
+                    const pairingResult = document.getElementById('pairing-result');
+                    foodInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') {
+                            // Simulated food pairings
+                            const pairings = [
+                                "Red wine",
+                                "Goat cheese",
+                                "Balsamic reduction",
+                                "Grilled vegetables",
+                                "Crusty bread"
+                            ];
+                            const randomPairings = pairings
+                                .sort(() => 0.5 - Math.random())
+                                .slice(0, 3);
+
+                            pairingResult.innerHTML = `
+                                <h3 class="text-lg font-bold">Pairings for ${foodInput.value}</h3>
+                                <ul>
+                                    ${randomPairings.map(p => <li>${p}</li>).join('')}
+                                </ul>
+                            `;
+                        }
+                    });
+                }
+            });
+        }
+
+        function showRecipeGenerator() {
+            Swal.fire({
+                title: 'AI Recipe Generator',
+                html: `
+                    <input id="ingredients-input" class="swal2-input" placeholder="Enter ingredients (comma-separated)">
+                    <div id="recipe-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const ingredientsInput = document.getElementById('ingredients-input');
+                    const recipeResult = document.getElementById('recipe-result');
+                    ingredientsInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') {
+                            const ingredients = ingredientsInput.value.split(',').map(i => i.trim());
+                            // Simulated recipe generation
+                            const recipe = `
+                                <h3 class="text-lg font-bold">Recipe: ${ingredients[0]} Surprise</h3>
+                                <h4>Ingredients:</h4>
+                                <ul>
+                                    ${ingredients.map(i => <li>${i}</li>).join('')}
+                                </ul>
+                                <h4>Instructions:</h4>
+                                <ol>
+                                    <li>Prepare all ingredients.</li>
+                                    <li>Mix ${ingredients[0]} with ${ingredients[1]}.</li>
+                                    <li>Add ${ingredients[2]} for flavor.</li>
+                                    <li>Cook for 20 minutes.</li>
+                                    <li>Serve and enjoy!</li>
+                                </ol>
+                            `;
+                            recipeResult.innerHTML = recipe;
+                        }
+                    });
+                }
+            });
+        }
+
+        function showRestaurantFinder() {
+            Swal.fire({
+                title: 'Smart Restaurant Finder',
+                html: `
+                    <div id="map" style="height: 300px;"></div>
+                    <div id="restaurant-list" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    if ("geolocation" in navigator) {
+                        navigator.geolocation.getCurrentPosition((position) => {
+                            const map = L.map('map').setView([position.coords.latitude, position.coords.longitude], 13);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '© OpenStreetMap contributors'
+                            }).addTo(map);
+
+                            // Simulated restaurant data
+                            const restaurants = [
+                                { name: "Tasty Bites", lat: position.coords.latitude + 0.01, lng: position.coords.longitude - 0.01, rating: 4.5 },
+                                { name: "Flavor Haven", lat: position.coords.latitude - 0.005, lng: position.coords.longitude + 0.005, rating: 4.2 },
+                                { name: "Culinary Delights", lat: position.coords.latitude + 0.008, lng: position.coords.longitude + 0.008, rating: 4.7 }
+                            ];
+
+                            restaurants.forEach(restaurant => {
+                                L.marker([restaurant.lat, restaurant.lng]).addTo(map)
+                                    .bindPopup(<b>${restaurant.name}</b><br>Rating: ${restaurant.rating});
+                            });
+
+                            const restaurantList = document.getElementById('restaurant-list');
+                            restaurantList.innerHTML = `
+                                <h3 class="text-lg font-bold">Nearby Restaurants:</h3>
+                                <ul>
+                                    ${restaurants.map(r => <li>${r.name} - Rating: ${r.rating}</li>).join('')}
+                                </ul>
+                            `;
+                        }, () => {
+                            Swal.fire('Error', 'Unable to access your location', 'error');
+                        });
+                    } else {
+                        Swal.fire('Error', 'Geolocation is not supported by your browser', 'error');
+                    }
+                }
+            });
+        }
+
+        function showMealPlanner() {
+            Swal.fire({
+                title: 'Personalized Meal Planner',
+                html: `
+                    <input id="calories-input" class="swal2-input" placeholder="Enter daily calorie goal">
+                    <div id="meal-plan-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const caloriesInput = document.getElementById('calories-input');
+                    const mealPlanResult = document.getElementById('meal-plan-result');
+                    caloriesInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') {
+                            const calories = parseInt(caloriesInput.value);
+                            // Simulated meal plan
+                            const mealPlan = `
+                                <h3 class="text-lg font-bold">Your ${calories} Calorie Meal Plan</h3>
+                                <ul>
+                                    <li>Breakfast: Oatmeal with fruits (300 cal)</li>
+                                    <li>Lunch: Grilled chicken salad (400 cal)</li>
+                                    <li>Snack: Greek yogurt with nuts (200 cal)</li>
+                                    <li>Dinner: Baked salmon with vegetables (500 cal)</li>
+                                </ul>
+                                <p>Total: ${300 + 400 + 200 + 500} calories</p>
+                            `;
+                            meal
+
+PlanResult.innerHTML = mealPlan;
+                        }
+                    });
+                }
+            });
+        }
+
+        function showTasteProfile() {
+            Swal.fire({
+                title: 'Taste Profile Analyzer',
+                html: `
+                    <div id="taste-quiz">
+                        <h3 class="text-lg font-bold mb-4">Rate your preference for these tastes:</h3>
+                        <div class="mb-2">
+                            <label>Sweet:</label>
+                            <input type="range" min="1" max="5" value="3" class="taste-slider" data-taste="sweet">
+                        </div>
+                        <div class="mb-2">
+                            <label>Salty:</label>
+                            <input type="range" min="1" max="5" value="3" class="taste-slider" data-taste="salty">
+                        </div>
+                        <div class="mb-2">
+                            <label>Sour:</label>
+                            <input type="range" min="1" max="5" value="3" class="taste-slider" data-taste="sour">
+                        </div>
+                        <div class="mb-2">
+                            <label>Bitter:</label>
+                            <input type="range" min="1" max="5" value="3" class="taste-slider" data-taste="bitter">
+                        </div>
+                        <div class="mb-2">
+                            <label>Umami:</label>
+                            <input type="range" min="1" max="5" value="3" class="taste-slider" data-taste="umami">
+                        </div>
+                        <button id="analyze-taste" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                            Analyze My Taste
+                        </button>
+                    </div>
+                    <div id="taste-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const analyzeButton = document.getElementById('analyze-taste');
+                    const tasteResult = document.getElementById('taste-result');
+                    analyzeButton.addEventListener('click', () => {
+                        const sliders = document.querySelectorAll('.taste-slider');
+                        const tasteProfile = {};
+                        sliders.forEach(slider => {
+                            tasteProfile[slider.dataset.taste] = slider.value;
+                        });
+
+                        // Create a radar chart
+                        const ctx = document.createElement('canvas');
+                        ctx.id = 'taste-chart';
+                        ctx.width = 300;
+                        ctx.height = 300;
+                        tasteResult.innerHTML = '';
+                        tasteResult.appendChild(ctx);
+
+                        new Chart(ctx, {
+                            type: 'radar',
+                            data: {
+                                labels: Object.keys(tasteProfile),
+                                datasets: [{
+                                    label: 'Your Taste Profile',
+                                    data: Object.values(tasteProfile),
+                                    fill: true,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                    borderColor: 'rgb(54, 162, 235)',
+                                    pointBackgroundColor: 'rgb(54, 162, 235)',
+                                    pointBorderColor: '#fff',
+                                    pointHoverBackgroundColor: '#fff',
+                                    pointHoverBorderColor: 'rgb(54, 162, 235)'
+                                }]
+                            },
+                            options: {
+                                elements: {
+                                    line: {
+                                        borderWidth: 3
+                                    }
+                                },
+                                scales: {
+                                    r: {
+                                        angleLines: {
+                                            display: false
+                                        },
+                                        suggestedMin: 0,
+                                        suggestedMax: 5
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function showCulinaryTour() {
+            Swal.fire({
+                title: 'Virtual Culinary Tour',
+                html: `
+                    <div id="culinary-tour-container" style="width: 100%; height: 400px;"></div>
+                    <div id="tour-info" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const container = document.getElementById('culinary-tour-container');
+                    const tourInfo = document.getElementById('tour-info');
+
+                    // Set up the scene
+                    const scene = new THREE.Scene();
+                    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                    const renderer = new THREE.WebGLRenderer();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                    container.appendChild(renderer.domElement);
+
+                    // Create a sphere for the world
+                    const geometry = new THREE.SphereGeometry(5, 32, 32);
+                    const texture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg');
+                    const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+                    const sphere = new THREE.Mesh(geometry, material);
+                    scene.add(sphere);
+
+                    camera.position.set(0, 0, 0.1);
+
+                    // Add clickable hotspots
+                    const hotspots = [
+                        { position: new THREE.Vector3(4, 1, -2), name: "Italy", info: "Home of pasta and pizza" },
+                        { position: new THREE.Vector3(-3, 2, 3), name: "Japan", info: "Land of sushi and ramen" },
+                        { position: new THREE.Vector3(2, -3, 3), name: "Mexico", info: "Birthplace of tacos and guacamole" }
+                    ];
+
+                    hotspots.forEach(hotspot => {
+                        const hotspotGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+                        const hotspotMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                        const hotspotMesh = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
+                        hotspotMesh.position.copy(hotspot.position);
+                        scene.add(hotspotMesh);
+
+                        hotspotMesh.userData = { name: hotspot.name, info: hotspot.info };
+                    });
+
+                    // Handle click events
+                    const raycaster = new THREE.Raycaster();
+                    const mouse = new THREE.Vector2();
+
+                    container.addEventListener('click', event => {
+                        mouse.x = (event.clientX / container.clientWidth) * 2 - 1;
+                        mouse.y = -(event.clientY / container.clientHeight) * 2 + 1;
+
+                        raycaster.setFromCamera(mouse, camera);
+                        const intersects = raycaster.intersectObjects(scene.children);
+
+                        if (intersects.length > 0) {
+                            const clickedObject = intersects[0].object;
+                            if (clickedObject.userData.name) {
+                                tourInfo.innerHTML = `
+                                    <h3 class="text-lg font-bold">${clickedObject.userData.name}</h3>
+                                    <p>${clickedObject.userData.info}</p>
+                                `;
+                            }
+                        }
+                    });
+
+                    // Animation loop
+                    function animate() {
+                        requestAnimationFrame(animate);
+                        sphere.rotation.y += 0.001;
+                        renderer.render(scene, camera);
+                    }
+                    animate();
+                }
+            });
+        }
+
+        function showHealthScore() {
+            Swal.fire({
+                title: 'Food Health Score',
+                html: `
+                    <input id="food-input" class="swal2-input" placeholder="Enter a food item">
+                    <div id="health-score-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const foodInput = document.getElementById('food-input');
+                    const healthScoreResult = document.getElementById('health-score-result');
+                    foodInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') {
+                            // Simulated health score calculation
+                            const score = Math.floor(Math.random() * 100);
+                            let color, message;
+                            if (score >= 80) {
+                                color = 'green';
+                                message = 'Excellent choice! This food is very healthy.';
+                            } else if (score >= 60) {
+                                color = 'yellow';
+                                message = 'Good choice. This food is moderately healthy.';
+                            } else {
+                                color = 'red';
+                                message = 'Be cautious. This food may not be very healthy.';
+                            }
+
+                            healthScoreResult.innerHTML = `
+                                <h3 class="text-lg font-bold">Health Score for ${foodInput.value}</h3>
+                                <div class="text-4xl font-bold" style="color: ${color};">${score}/100</div>
+                                <p>${message}</p>
+                            `;
+                        }
+                    });
+                }
+            });
+        }
+
+        function showAllergyChecker() {
+            Swal.fire({
+                title: 'Allergy Checker',
+                html: `
+                    <input id="food-input" class="swal2-input" placeholder="Enter a food item">
+                    <input id="allergy-input" class="swal2-input mt-4" placeholder="Enter your allergies (comma-separated)">
+                    <div id="allergy-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const foodInput = document.getElementById('food-input');
+                    const allergyInput = document.getElementById('allergy-input');
+                    const allergyResult = document.getElementById('allergy-result');
+                    
+                    function checkAllergies() {
+                        const food = foodInput.value.toLowerCase();
+                        const allergies = allergyInput.value.toLowerCase().split(',').map(a => a.trim());
+                        
+                        // Simulated ingredient list
+                        const ingredients = ['wheat', 'milk', 'eggs', 'soy', 'nuts', 'fish'];
+                        const foodIngredients = ingredients.filter(() => Math.random() > 0.5);
+                        
+                        const allergens = foodIngredients.filter(i => allergies.includes(i));
+                        
+                        if (allergens.length > 0) {
+                            allergyResult.innerHTML = `
+                                <h3 class="text-lg font-bold text-red-500">Warning!</h3>
+                                <p>${food} contains the following allergens: ${allergens.join(', ')}</p>
+                                <p>Avoid this food or consult with your doctor.</p>
+                            `;
+                        } else {
+                            allergyResult.innerHTML = `
+                                <h3 class="text-lg font-bold text-green-500">Safe to Eat</h3>
+                                <p>${food} does not contain any of your listed allergens.</p>
+                            `;
+                        }
+                    }
+                    
+                    foodInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter' && allergyInput.value) checkAllergies();
+                    });
+                    allergyInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter' && foodInput.value) checkAllergies();
+                    });
+                }
+            });
+        }
+
+        function showPortionControl() {
+            Swal.fire({
+                title: 'Portion Control Assistant',
+                html: `
+                    <input id="food-input" class="swal2-input" placeholder="Enter a food item">
+                    <input id="weight-input" class="swal2-input mt-4" type="number" placeholder="Enter your weight (kg)">
+                    <input id="height-input" class="swal2-input mt-4" type="number" placeholder="Enter your height (cm)">
+                    <select id="activity-level" class="swal2-select mt-4">
+                        <option value="">Select activity level</option>
+                        <option value="sedentary">Sedentary</option>
+                        <option value="light">Lightly Active</option>
+                        <option value="moderate">Moderately Active</option>
+                        <option value="very">Very Active</option>
+                        <option value="extra">Extra Active</option>
+                    </select>
+                    <div id="portion-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const foodInput = document.getElementById('food-input');
+                    const weightInput = document.getElementById('weight-input');
+                    const heightInput = document.getElementById('height-input');
+                    const activityLevel = document.getElementById('activity-level');
+                    const portionResult = document.getElementById('portion-result');
+                    
+                    function calculatePortion() {
+                        const food = foodInput.value;
+                        const weight = parseFloat(weightInput.value);
+                        const height = parseFloat(heightInput.value);
+                        const activity = activityLevel.value;
+                        
+                        if (!food || !weight || !height || !activity) {
+                            portionResult.innerHTML = '<p class="text-red-500">Please fill in all fields.</p>';
+                            return;
+                        }
+                        
+                        // Simulated BMR calculation (using Harris-Benedict equation)
+                        const bmr = 10 * weight + 6.25 * height - 5 * 30 + 5; // Assuming age 30 for simplicity
+                        
+                        // Activity factor
+                        const activityFactors = {
+                            sedentary: 1.2,
+                            light: 1.375,
+                            moderate: 1.55,
+                            very: 1.725,
+                            extra: 1.9
+                        };
+                        
+                        const tdee = bmr * activityFactors[activity];
+                        
+                        // Simulated portion calculation
+                        const caloriesPerServing = Math.floor(Math.random() * 300 + 100);
+                        const recommendedServings = Math.round((tdee * 0.3) / caloriesPerServing * 10) / 10; // Assuming 30% of TDEE for a meal
+                        
+                        portionResult.innerHTML = `
+                            <h3 class="text-lg font-bold">Recommended Portion for ${food}</h3>
+                            <p>Based on your information:</p>
+                            <ul>
+                                <li>Estimated daily calorie needs: ${Math.round(tdee)} calories</li>
+                                <li>Calories per serving of ${food}: ${caloriesPerServing}</li>
+                                <li>Recommended servings: ${recommendedServings}</li>
+                            </ul>
+                            <p class="mt-2">Remember, this is a general guideline. Consult a nutritionist for personalized advice.</p>
+                        `;
+                    }
+                    
+                    [foodInput, weightInput, heightInput, activityLevel].forEach(input => {
+                        input.addEventListener('change', calculatePortion);
+                    });
+                }
+            });
+        }
+
+        function showNutrientOptimizer() {
+            Swal.fire({
+                title: 'Nutrient Optimizer',
+                html: `
+                    <textarea id="meal-input" class="swal2-textarea" placeholder="Enter your meal (comma-separated ingredients)"></textarea>
+                    <div id="nutrient-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const mealInput = document.getElementById('meal-input');
+                    const nutrientResult = document.getElementById('nutrient-result');
+                    
+                    mealInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') {
+                            const ingredients = mealInput.value.split(',').map(i => i.trim());
+                            
+                            // Simulated nutrient analysis
+                            const nutrients = {
+                                protein: Math.random() * 30 + 10,
+                                carbs: Math.random() * 50 + 20,
+                                fat: Math.random() * 20 + 5,
+                                fiber: Math.random() * 10 + 2,
+                                vitaminC: Math.random() * 100,
+                                calcium: Math.random() * 300 + 100
+                            };
+                            
+                            const recommendations = [];
+                            if (nutrients.protein < 20) recommendations.push('Add a lean protein source like chicken or tofu.');
+                            if (nutrients.fiber < 5) recommendations.push('Include more vegetables or whole grains for fiber.');
+                            if (nutrients.vitaminC < 60) recommendations.push('Add some citrus fruits or bell peppers for vitamin C.');
+                            if (nutrients.calcium < 300) recommendations.push('Consider adding dairy or leafy greens for calcium.');
+                            
+                            nutrientResult.innerHTML = `
+                                <h3 class="text-lg font-bold">Nutrient Analysis</h3>
+                                <ul>
+                                    <li>Protein: ${nutrients.protein.toFixed(1)}g</li>
+                                    <li>Carbs: ${nutrients.carbs.toFixed(1)}g</li>
+                                    <li>Fat: ${nutrients.fat.toFixed(1)}g</li>
+                                    <li>Fiber: ${nutrients.fiber.toFixed(1)}g</li>
+                                    <li>Vitamin C: ${nutrients.vitaminC.toFixed(1)}mg</li>
+                                    <li>Calcium: ${nutrients.calcium.toFixed(1)}mg</li>
+                                </ul>
+                                <h4 class="text-lg font-bold mt-4">Recommendations:</h4>
+                                <ul>
+                                    ${recommendations.map(r => <li>${r}</li>).join('')}
+                                </ul>
+                            `;
+                        }
+                    });
+                }
+            });
+        }
+
+        function showPersonalizedDiet() {
+            Swal.fire({
+                title: 'Personalized Diet Planner',
+                html: `
+                    <input id="age-input" class="swal2-input" type="number" placeholder="Enter your age">
+                    <input id="weight-input" class="swal2-input mt-4" type="number" placeholder="Enter your weight (kg)">
+                    <input id="height-input" class="swal2-input mt-4" type="number" placeholder="Enter your height (cm)">
+                    <select id="gender-select" class="swal2-select mt-4">
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                    <select id="goal-select" class="swal2-select mt-4">
+                        <option value="">Select your goal</option>
+                        <option value="lose">Lose Weight</option>
+                        <option value="maintain">Maintain Weight</option>
+                        <option value="gain">Gain Weight</option>
+                    </select>
+                    <div id="diet-result" class="mt-4"></div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                customClass: {
+                    container: 'responsive-alert'
+                },
+                didRender: () => {
+                    const ageInput = document.getElementById('age-input');
+                    const weightInput = document.getElementById('weight-input');
+                    const heightInput = document.getElementById('height-input');
+                    const genderSelect = document.getElementById('gender-select');
+                    const goalSelect = document.getElementById('goal-select');
+                    const dietResult = document.getElementById('diet-result');
+                    
+                    function generateDietPlan() {
+                        const age = parseInt(ageInput.value);
+                        const weight = parseFloat(weightInput.value);
+                        const height = parseFloat(heightInput.value);
+                        const gender = genderSelect.value;
+                        const goal = goalSelect.value;
+                        
+                        if (!age || !weight || !height || !gender || !goal) {
+                            dietResult.innerHTML = '<p class="text-red-500">Please fill in all fields.</p>';
+                            return;
+                        }
+                        
+                        // Calculate BMR using Harris-Benedict equation
+                        let bmr;
+                        if (gender === 'male') {
+                            bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+                        } else {
+                            bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+                        }
+                        
+                        // Adjust calories based on goal
+                        let calories;
+                        switch (goal) {
+                            case 'lose':
+                                calories = bmr * 0.9;
+                                break;
+                            case 'maintain':
+                                calories = bmr * 1.2;
+                                break;
+                            case 'gain':
+                                calories = bmr * 1.3;
+                                break;
+                        }
+                        
+                        // Generate meal plan
+                        const mealPlan = {
+                            breakfast: Oatmeal with fruits (${Math.round(calories * 0.3)} cal),
+                            lunch: Grilled chicken salad (${Math.round(calories * 0.35)} cal),
+                            dinner: Baked salmon with vegetables (${Math.round(calories * 0.35)} cal)
+                        };
+                        
+                        dietResult.innerHTML = `
+                            <h3 class="text-lg font-bold">Your Personalized Diet Plan</h3>
+                            <p>Daily Calorie Target: ${Math.round(calories)} calories</p>
+                            <h4 class="font-bold mt-2">Meal Plan:</h4>
+                            <ul>
+                                <li>Breakfast: ${mealPlan.breakfast}</li>
+                                <li>Lunch: ${mealPlan.lunch}</li>
+                                <li>Dinner: ${mealPlan.dinner}</li>
+                            </ul>
+                            <p class="mt-4">This is a basic plan. For a more detailed and personalized diet plan, consult a registered dietitian.</p>
+                        `;
+                    }
+                    
+                    [ageInput, weightInput, heightInput, genderSelect, goalSelect].forEach(input => {
+                        input.addEventListener('change', generateDietPlan);
+                    });
+                }
+            });
+        }
+
+        // Mobile menu functionality
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.createElement('div');
+        mobileMenu.className = 'mobile-menu-dropdown hidden fixed top-16 left-0 w-full bg-white shadow-md z-50';
+        document.body.appendChild(mobileMenu);
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            if (!mobileMenu.classList.contains('hidden')) {
+                mobileMenu.innerHTML = `
+                    <div class="container mx-auto px-6 py-3">
+                        <div class="grid grid-cols-3 gap-4">
+                            ${features.map(feature => `
+                                <div class="text-center" onclick="showFeature('${feature.id}')">
+                                    <i class="fas ${feature.icon} text-2xl text-${feature.color}"></i>
+                                    <p class="text-sm mt-1">${feature.title}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        // Login functionality
+        function showLoginPopup() {
+            Swal.fire({
+                title: 'Login',
+                html: `
+                    <input id="email-input" class="swal2-input" type="email" placeholder="Enter your email">
+                    <input id="name-input" class="swal2-input mt-4" type="text" placeholder="Enter your name">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Login',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    const email = document.getElementById('email-input').value;
+                    const name = document.getElementById('name-input').value;
+                    if (!email || !name) {
+                        Swal.showValidationMessage('Please enter both email and name');
+                    }
+                    return { email, name };
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const { email, name } = result.value;
+                    // Store user data in localStorage (in a real app, you'd use a secure backend)
+                    localStorage.setItem('user', JSON.stringify({ email, name }));
+                    Swal.fire('Logged in successfully!', '', 'success');
+                }
+            });
+        }
+
+        // Check if user is logged in
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            showLoginPopup();
+        }
+
+        // Add logout button
+        const logoutButton = document.createElement('button');
+        logoutButton.textContent = 'Logout';
+        logoutButton.className = 'bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors';
+        logoutButton.style.position = 'fixed';
+        logoutButton.style.bottom = '20px';
+        logoutButton.style.right = '20px';
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem('user');
+            Swal.fire('Logged out successfully!', '', 'success').then(() => {
+                showLoginPopup();
+            });
+        });
+        document.body.appendChild(logoutButton);
+    </script>
+</body>
+</html>
