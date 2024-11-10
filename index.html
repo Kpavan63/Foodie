@@ -125,7 +125,7 @@
             const emoji = document.createElement('div');
             emoji.textContent = foodEmojis[Math.floor(Math.random() * foodEmojis.length)];
             emoji.style.position = 'fixed';
-            emoji.style.left = ${Math.random() * 100}vw;
+            emoji.style.left = `${Math.random() * 100}vw`;
             emoji.style.top = '-20px';
             emoji.style.fontSize = '20px';
             emoji.style.pointerEvents = 'none';
@@ -536,7 +536,7 @@
                             pairingResult.innerHTML = `
                                 <h3 class="text-lg font-bold">Pairings for ${foodInput.value}</h3>
                                 <ul>
-                                    ${randomPairings.map(p => <li>${p}</li>).join('')}
+                                    ${randomPairings.map(p => `<li>${p}</li>`).join('')}
                                 </ul>
                             `;
                         }
@@ -569,7 +569,7 @@
                                 <h3 class="text-lg font-bold">Recipe: ${ingredients[0]} Surprise</h3>
                                 <h4>Ingredients:</h4>
                                 <ul>
-                                    ${ingredients.map(i => <li>${i}</li>).join('')}
+                                    ${ingredients.map(i => `<li>${i}</li>`).join('')}
                                 </ul>
                                 <h4>Instructions:</h4>
                                 <ol>
@@ -617,14 +617,14 @@
 
                             restaurants.forEach(restaurant => {
                                 L.marker([restaurant.lat, restaurant.lng]).addTo(map)
-                                    .bindPopup(<b>${restaurant.name}</b><br>Rating: ${restaurant.rating});
+                                    .bindPopup(`<b>${restaurant.name}</b><br>Rating: ${restaurant.rating}`);
                             });
 
                             const restaurantList = document.getElementById('restaurant-list');
                             restaurantList.innerHTML = `
                                 <h3 class="text-lg font-bold">Nearby Restaurants:</h3>
                                 <ul>
-                                    ${restaurants.map(r => <li>${r.name} - Rating: ${r.rating}</li>).join('')}
+                                    ${restaurants.map(r => `<li>${r.name} - Rating: ${r.rating}</li>`).join('')}
                                 </ul>
                             `;
                         }, () => {
@@ -1076,7 +1076,7 @@ PlanResult.innerHTML = mealPlan;
                                 </ul>
                                 <h4 class="text-lg font-bold mt-4">Recommendations:</h4>
                                 <ul>
-                                    ${recommendations.map(r => <li>${r}</li>).join('')}
+                                    ${recommendations.map(r => `<li>${r}</li>`).join('')}
                                 </ul>
                             `;
                         }
@@ -1155,9 +1155,9 @@ PlanResult.innerHTML = mealPlan;
                         
                         // Generate meal plan
                         const mealPlan = {
-                            breakfast: Oatmeal with fruits (${Math.round(calories * 0.3)} cal),
-                            lunch: Grilled chicken salad (${Math.round(calories * 0.35)} cal),
-                            dinner: Baked salmon with vegetables (${Math.round(calories * 0.35)} cal)
+                            breakfast: `Oatmeal with fruits (${Math.round(calories * 0.3)} cal)`,
+                            lunch: `Grilled chicken salad (${Math.round(calories * 0.35)} cal)`,
+                            dinner: `Baked salmon with vegetables (${Math.round(calories * 0.35)} cal)`
                         };
                         
                         dietResult.innerHTML = `
